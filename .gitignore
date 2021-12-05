@@ -1,0 +1,15 @@
+etc/config.cfg
+ssl_cert/
+*.wav
+*.wav.txt
+*.pbmm
+*.scorer
+*.tar.gz
+__pycache__/
+*.json
+*.log
+*.sqlite
+mudeer.egg-info/
+
+# Development env
+.vscode/
