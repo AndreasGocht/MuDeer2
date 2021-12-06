@@ -37,4 +37,4 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        deer.disconncet()
+        deer.disconnect()

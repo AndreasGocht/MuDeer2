@@ -2,6 +2,10 @@ import logging
 import time
 
 import mudeer.voice.voice_deep_speech as voice_deep_speech
+import mudeer.com.mumble as mumble
+import mudeer.com.telegram as telegram
+
+import mudeer.process as process
 
 
 class MuDeer():
@@ -19,13 +23,17 @@ class MuDeer():
         self.stt.add_hot_words([self.name.lower()], 20)
 
         self.log.debug("Init Mumble")
+        self.mumble = mumble.Mumble(config["mumble"], self.name, self.stt, process.process)
+        self.telegram = telegram.Telegram(config["telegram"], self.name, self.stt, process.process)
 
     def connect(self):
-        self.coms.connect()
+        self.mumble.connect()
+        self.telegram.connect()
+
+    def disconnect(self):
+        self.mumble.disconnect()
+        self.telegram.disconnect()
 
     def run(self):
         while True:
             time.sleep(0.01)
-
-    def disconnect(self):
-        pass

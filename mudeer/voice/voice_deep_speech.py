@@ -13,6 +13,7 @@ class VoiceDeepSpeech():
 
         self.record_wav = record_wav
         self.record_user = record_user
+        self.model_sample_rate = 16000
 
         if self.record_wav:
             for user in self.record_user:
@@ -49,7 +50,7 @@ class VoiceDeepSpeech():
         # resample for deepspeech
         self.log.debug("Got Voice from {}".format(user["name"]))
 
-        number_of_samples = round(len(sound_chunk) * float(16000) / sample_rate)
+        number_of_samples = round(len(sound_chunk) * float(self.model_sample_rate) / sample_rate)
         sound_chunk = scipy.signal.resample(sound_chunk, number_of_samples)
         sound_chunk = numpy.around(sound_chunk).astype(numpy.int16)
 
@@ -78,12 +79,10 @@ class VoiceDeepSpeech():
             if user_name in self.record_user:
                 filename = os.path.join(user_name, datetime.datetime.now().strftime("savewav_%Y-%m-%d_%H-%M-%S_%f.wav"))
                 self.log.debug("write wav %s", filename)
-                wf = wave.open(filename, 'wb')
-                wf.setnchannels(1)
-                # wf.setsampwidth(self.pa.get_sample_size(FORMAT))
-                wf.setsampwidth(2)
-                wf.setframerate(16000)
-                wf.writeframes(data)
-                wf.close()
+                with wave.open(filename, 'wb') as wf:
+                    wf.setnchannels(1)
+                    wf.setsampwidth(2)  # e.g. 16 bit
+                    wf.setframerate(self.model_sample_rate)
+                    wf.writeframes(data)
                 with open(filename + ".txt", "w") as f:
                     f.write(text)
