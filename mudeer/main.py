@@ -23,16 +23,23 @@ class MuDeer():
         self.stt.add_hot_words([self.name.lower()], 20)
 
         self.log.debug("Init Mumble")
-        self.mumble = mumble.Mumble(config["mumble"], self.name, self.stt, process.process)
-        self.telegram = telegram.Telegram(config["telegram"], self.name, self.stt, process.process)
+
+        self.global_context = {}
+        self.coms = {}
+
+        self.coms["mumble"] = mumble.Mumble(config["mumble"], self.name, self.stt, self.process)
+        self.coms["telegram"] = telegram.Telegram(config["telegram"], self.name, self.stt, self.process)
 
     def connect(self):
-        self.mumble.connect()
-        self.telegram.connect()
+        for com in self.coms:
+            self.coms[com].connect()
 
     def disconnect(self):
-        self.mumble.disconnect()
-        self.telegram.disconnect()
+        for com in self.coms:
+            self.coms[com].disconnect()
+
+    def process(self, text: str, chat_context: dict) -> str:
+        return process.process(text, chat_context, self.global_context, self.coms)
 
     def run(self):
         while True:
