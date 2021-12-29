@@ -37,6 +37,8 @@ class Mumble(threading.Thread):
         self.log.debug("self.cert_file: {}".format(self.cert_file))
         self.log.debug("self.key_file: {}".format(self.key_file))
 
+        self.connected = False
+
         # set up
         self.log.debug("log into mumule server {}:{} with name {}".format(self.host, self.port, self.login_name))
         self.bot = pymumble.Mumble(self.host, self.user_name, port=self.port,
@@ -56,6 +58,10 @@ class Mumble(threading.Thread):
                                         self.get_callback_channel_update)
         self.bot.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_CHANNELREMOVED,
                                         self.get_callback_channel_delete)
+        self.bot.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_CONNECTED,
+                                        self.get_callback_connected)
+        self.bot.callbacks.set_callback(pymumble.constants.PYMUMBLE_CLBK_DISCONNECTED,
+                                        self.get_callback_diconnected)
 
         self.stream_lock = threading.RLock()
         self.stream_frames = {}
@@ -102,7 +108,11 @@ class Mumble(threading.Thread):
             self.bot.my_channel().send_text_message(send_message)
 
     def move_to_name(self, channel_name):
+        self.log.debug("try to moved to channel_name {}".format(channel_name))
         try:
+            while not self.connected:
+                time.sleep(0.01)
+
             channel = self.bot.channels.find_by_name(channel_name)
             channel.move_in()
             time.sleep(0.1)  # ok for now, but check for callback
@@ -113,6 +123,9 @@ class Mumble(threading.Thread):
     def move_to_channel(self, channel):
         self.log.debug("try to moved to channel {}".format(channel))
         try:
+            while not self.connected:
+                time.sleep(0.01)
+
             channel.move_in()
             time.sleep(0.1)  # ok for now, but check for callback
             self.log.debug("moved to channel {}".format(channel))
@@ -165,6 +178,12 @@ class Mumble(threading.Thread):
 
     def get_callback_channel_delete(self, channel):
         pass
+
+    def get_callback_connected(self):
+        self.connected = True
+
+    def get_callback_diconnected(self):
+        self.connected = False
 
     def check_audio(self):
         cur_time = time.time()
