@@ -11,3 +11,12 @@ Moreover, to use voice recognition, you need voice models and scorers for DeepSp
 * Other Languages: https://discourse.mozilla.org/t/links-to-pretrained-models/62688 
 
 Feel free to open an issue if you do have any questions ;-).  
+
+## Dependencies
+
+Besides the dependencies in the setup.cfg, the following libraries are needed:
+
+* libopus
+* libopusfile
+* libogg
+* libvorbis
