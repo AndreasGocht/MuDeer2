@@ -3,13 +3,15 @@ import time
 import logging
 import numpy
 import threading
-from typing import Callable
+import typing
+
+from mudeer.com.com_types import ComTypes
 
 from pymumble_py3 import mumble_pb2
 
 
 class Mumble(threading.Thread):
-    def __init__(self, settings: dict, name: str, stt, process: Callable[[str, dict], str]):
+    def __init__(self, settings: dict, name: str, stt, process: typing.Callable[[str, dict, ComTypes], typing.Tuple[bool, str]]):
         super().__init__()
         self.log = logging.getLogger(__name__)
 
@@ -156,7 +158,7 @@ class Mumble(threading.Thread):
         if issuing_user["name"] == self.follow and self.tag in text_message.message:
             # todo impelemt some functionality
             channel = self.bot.channels[text_message.channel_id[0]]  # why ever this is a list (maybe global comm?)
-            return_str = self.process(text_message.message, self.context)
+            _, return_str = self.process(text_message.message, self.context, ComTypes.MUMBLE)
             self.send_to_channel(return_str, channel)
 
     def get_callback_sound(self, user, soundchunk):
@@ -199,7 +201,7 @@ class Mumble(threading.Thread):
                     to_process.append((data, user))
 
         for data, user in to_process:
-            text = self.stt.process_voice(user, data, 48000)
+            text = self.stt.process_voice_chunk(user, data, 48000)
             channel = self.bot.channels[user["channel_id"]]
             issuning_user = user["name"]
             # self.log.debug("recived text \"{}\"".format(text))
@@ -211,10 +213,12 @@ class Mumble(threading.Thread):
             if text == self.user_name.lower() or text == self.login_name.lower():
                 self.listening = True
                 self.send_to_channel("ja?", channel)
-            elif self.listening:
-                return_str = self.process(text, self.context)
-                self.listening = self.context.get("keep_listening", False)
-                self.send_to_channel(return_str, channel)
+            elif self.listening and text != "":
+                (follow_up_message, return_str) = self.process(text, self.context, ComTypes.MUMBLE)
+                if not follow_up_message:
+                    self.listening = self.context.get("keep_listening", False)
+                if return_str != "":
+                    self.send_to_channel(return_str, channel)
 
     def run(self):
         self.running = True

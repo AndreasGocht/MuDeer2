@@ -9,8 +9,12 @@ import datetime
 import time
 
 
+def reload():
+    pass
+
+
 def add_br(m):
-    return m.group(1) + "<br/>"
+    return m.group(1) + "\n"
 
 
 class Weisheit():
@@ -32,12 +36,12 @@ class Weisheit():
         self.log.debug("Got {} weisheiten".format(len(self.weisheiten)))
 
     def get_key_words(self):
-        return ["weisheit"]
+        return ["weisheit", "weißheit"]
 
-    def process(self):
+    def process(self, chat_context, global_context, coms):
         weisheit = random.choice(self.weisheiten)
         self.log.debug("Sende weisheit \"{}\"".format(weisheit))
-        return weisheit
+        return (False, weisheit)
 
     def gen_help(self):
         return ["weisheit - Eine Weisheit von Felix"]

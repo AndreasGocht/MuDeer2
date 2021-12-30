@@ -1,11 +1,14 @@
 import logging
 import time
+import typing
+import importlib
+import traceback
 
 import mudeer.voice.voice_deep_speech as voice_deep_speech
 import mudeer.com.mumble as mumble
 import mudeer.com.telegram as telegram
-
-import mudeer.process as process
+from mudeer.com.com_types import ComTypes
+import mudeer.skills
 
 
 class MuDeer():
@@ -26,6 +29,7 @@ class MuDeer():
 
         self.global_context = {}
         self.coms = {}
+        self.skills = mudeer.skills.Skills()
 
         self.coms["mumble"] = mumble.Mumble(config["mumble"], self.name, self.stt, self.process)
         self.coms["telegram"] = telegram.Telegram(config["telegram"], self.name, self.stt, self.process)
@@ -38,8 +42,28 @@ class MuDeer():
         for com in self.coms:
             self.coms[com].disconnect()
 
-    def process(self, text: str, chat_context: dict) -> str:
-        return process.process(text, chat_context, self.global_context, self.coms)
+    def process(self, text: str, chat_context: dict, source: ComTypes) -> typing.Tuple[bool, str]:
+        if "!!reload!!" in text:
+            self.log.warn("reload initalised by \"{}\"".format(text))
+            try:
+                mudeer.skills = importlib.reload(mudeer.skills)
+                mudeer.skills.reload()
+                self.skills = mudeer.skills.Skills()
+            except ImportError as e:
+                self.log.fatal("reload failed:\n{}".format(traceback.format_exc()))
+                return (False, "reload failed:\n{}".format(e))
+            self.log.warn("reload successful")
+            return (False, "reload successful")
+        else:
+            try:
+                return self.skills.process(text, chat_context, self.global_context, self.coms, source)
+            except KeyboardInterrupt:
+                raise
+            except SystemExit:
+                raise
+            except Exception as e:
+                self.log.fatal("Got Error during Processing:\n{}".format(traceback.format_exc()))
+                return (False, "I got some Error")
 
     def run(self):
         while True:

@@ -1,12 +1,12 @@
-import logging
-import threading
-import numpy
-import wave
-import ffmpeg
-from typing import Callable
-
-from io import BytesIO
 import telegram.ext as tex
+import logging
+import ffmpeg
+import typing
+# import io
+
+from mudeer.com.com_types import ComTypes
+
+# from io import BytesIO
 
 
 class Telegram():
@@ -15,7 +15,7 @@ class Telegram():
     Speech is also processed to text, unsing TTS (e.g. DeepSpeech)
     """
 
-    def __init__(self, settings: dict, name: str, stt, process: Callable[[str, dict], str]):
+    def __init__(self, settings: dict, name: str, stt, process: typing.Callable[[str, dict, ComTypes], typing.Tuple[bool, str]]):
         super().__init__()
         self.log = logging.getLogger(__name__)
         self.log.debug("init")
@@ -41,6 +41,9 @@ class Telegram():
         stt_handler = tex.MessageHandler(tex.Filters.voice, self.get_callback_stt)
         self.dispatcher.add_handler(stt_handler)
 
+        text_handler = tex.MessageHandler(tex.Filters.text, self.get_callback_text)
+        self.dispatcher.add_handler(text_handler)
+
         self.context = {}
         self.process = process
 
@@ -55,37 +58,27 @@ class Telegram():
         context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
 
     def get_callback_stt(self, update, context):
-        def normalize_audio(audio):
-            out, err = (
-                ffmpeg.input("pipe:0", format='ogg')
-                .output(
-                    "pipe:1",
-                    f="WAV",
-                    acodec="pcm_s16le",
-                    ac=1,
-                    ar="16k",
-                    loglevel="error",
-                    hide_banner=None,
-                )
-                .run(input=audio, capture_stdout=True, capture_stderr=True)
-            )
-            if err:
-                raise Exception(err)
-            return out
 
-        mime = update.message.voice.mime_type
+        mime_type = update.message.voice.mime_type
+        if mime_type != "audio/ogg":
+            self.log.fatal("Wronge Mime Type, recived: {}, expected audio/ogg".format(mime_type))
+            context.bot.send_message(chat_id=update.effective_chat.id, text="got some error")
+            return
+
         file_size = float(update.message.voice.file_size)
         self.log.debug("file size: {} MB".format(file_size/1024/1024))
+        self.log.debug("mime Type: {}".format(mime_type))
 
         file = update.message.voice.get_file()
         data = file.download_as_bytearray()
 
-        audio = normalize_audio(data)
-        audio = BytesIO(audio)
-        with wave.Wave_read(audio) as wav:
-            audio = numpy.frombuffer(wav.readframes(wav.getnframes()), numpy.int16)
-        text = self.stt.process_voice_raw({"name": "tbd"}, audio)
+        text = self.stt.process_voice_opus({"name": "tbd"}, data)
 
-        return_str = self.process(text, context.chat_data)
+        _, return_str = self.process(text, context.chat_data, ComTypes.TELEGRAM)
 
+        context.bot.send_message(chat_id=update.effective_chat.id, text=return_str)
+
+    def get_callback_text(self, update, context):
+        text = update.message.text
+        _, return_str = self.process(text.lower(), context.chat_data, ComTypes.TELEGRAM)
         context.bot.send_message(chat_id=update.effective_chat.id, text=return_str)
