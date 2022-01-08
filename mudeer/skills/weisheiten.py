@@ -3,10 +3,9 @@ import re
 import html
 import random
 import logging
-import os
-import json
-import datetime
-import time
+import typing
+
+from mudeer.skills.basic_skill import BasicSkill
 
 
 def reload():
@@ -17,7 +16,7 @@ def add_br(m):
     return m.group(1) + "\n"
 
 
-class Weisheit():
+class Weisheit(BasicSkill):
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.weisheiten = []
@@ -35,13 +34,13 @@ class Weisheit():
                     self.weisheiten.append(html.unescape(w))
         self.log.debug("Got {} weisheiten".format(len(self.weisheiten)))
 
-    def get_key_words(self):
+    def get_key_words(self) -> typing.List[str]:
         return ["weisheit", "weißheit"]
 
-    def process(self, chat_context, global_context, coms):
+    def process(self, text: str, chat_context: dict, global_context: dict, coms: dict) -> typing.Tuple[bool, str]:
         weisheit = random.choice(self.weisheiten)
         self.log.debug("Sende weisheit \"{}\"".format(weisheit))
         return (False, weisheit)
 
-    def gen_help(self):
+    def gen_help(self) -> typing.List[str]:
         return ["weisheit - Eine Weisheit von Felix"]

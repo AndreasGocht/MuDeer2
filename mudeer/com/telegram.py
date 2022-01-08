@@ -1,4 +1,6 @@
 import telegram.ext as tex
+import telegram as t
+
 import logging
 import ffmpeg
 import typing
@@ -47,15 +49,23 @@ class Telegram():
         self.context = {}
         self.process = process
 
+        self.known_commands = [
+            ("online", "Wer so im Mumble ist"),
+            ("channel", "Erstellt neuen Kanal")
+        ]
+
     def connect(self):
         self.updater.start_polling()
 
     def disconnect(self):
         self.updater.stop()
 
-    def get_callback_start(self, update, context):
+    def get_callback_start(self, update: t.Update, context: tex.CallbackContext):
+        """Sends a message with three inline buttons attached."""
         self.log.debug("got event {}".format(update))
-        context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+        context.bot.delete_my_commands()
+        context.bot.set_my_commands(self.known_commands)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Hallo, ich bin Lara.")
 
     def get_callback_stt(self, update, context):
 
@@ -80,5 +90,6 @@ class Telegram():
 
     def get_callback_text(self, update, context):
         text = update.message.text
-        _, return_str = self.process(text.lower(), context.chat_data, ComTypes.TELEGRAM)
+        self.log.debug("Got message {}".format(text))
+        _, return_str = self.process(text, context.chat_data, ComTypes.TELEGRAM)
         context.bot.send_message(chat_id=update.effective_chat.id, text=return_str)
