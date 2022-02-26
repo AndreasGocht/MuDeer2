@@ -17,6 +17,10 @@ class STATE(Enum):
     WAIT_FOR_NAME = 1
 
 
+def init():
+    return Channel()
+
+
 class Channel(BasicSkill):
     def __init__(self):
         self.log = logging.getLogger(__name__)

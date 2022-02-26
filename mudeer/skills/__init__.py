@@ -1,6 +1,8 @@
 import importlib
+from multiprocessing.spawn import import_main_path
 import typing
-import importlib
+import logging
+import traceback
 
 from mudeer.skills.basic_skill import BasicSkill
 import mudeer.skills.weisheiten
@@ -25,10 +27,15 @@ def reload():
 
 class Skills():
     def __init__(self):
+        self.log = logging.getLogger(__name__)
         self.skill_list = []
-        self.skill_list.append(mudeer.skills.weisheiten.Weisheit())
-        self.skill_list.append(mudeer.skills.online.Online())
-        self.skill_list.append(mudeer.skills.channel.Channel())
+        for skill in [mudeer.skills.weisheiten, mudeer.skills.online, mudeer.skills.channel]:
+            try:
+                self.skill_list.append(skill.init())
+            except Exception as e:
+                self.log.fatal("Error loading Skill: {}".format(e))
+                self.log.fatal("Traceback: {}".format(traceback.format_exc()))
+                self.log.fatal("Skill won't be available")
 
     def process(self, text: str, chat_context: dict, global_context: dict, coms: dict, source: ComTypes) -> typing.Tuple[bool, str]:
         """

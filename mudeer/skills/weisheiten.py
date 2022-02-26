@@ -16,6 +16,10 @@ def add_br(m):
     return m.group(1) + "\n"
 
 
+def init():
+    return Weisheit()
+
+
 class Weisheit(BasicSkill):
     def __init__(self):
         self.log = logging.getLogger(__name__)

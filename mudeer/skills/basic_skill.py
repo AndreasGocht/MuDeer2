@@ -2,6 +2,10 @@ from abc import ABCMeta, abstractmethod
 import typing
 
 
+def init():
+    return BasicSkill()
+
+
 class BasicSkill(metaclass=ABCMeta):
     @abstractmethod
     def __init__(self):

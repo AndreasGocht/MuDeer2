@@ -10,6 +10,10 @@ def reload():
     pass
 
 
+def init():
+    return Online()
+
+
 class Online(BasicSkill):
     def __init__(self):
         self.log = logging.getLogger(__name__)
