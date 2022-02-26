@@ -40,6 +40,9 @@ class Telegram():
         start_handler = tex.CommandHandler("start", self.get_callback_start)
         self.dispatcher.add_handler(start_handler)
 
+        get_id_handler = tex.CommandHandler("get_id", self.get_callback_get_id)
+        self.dispatcher.add_handler(get_id_handler)
+
         stt_handler = tex.MessageHandler(tex.Filters.voice, self.get_callback_stt)
         self.dispatcher.add_handler(stt_handler)
 
@@ -50,8 +53,10 @@ class Telegram():
         self.process = process
 
         self.known_commands = [
-            ("online", "Wer so im Mumble ist"),
-            ("channel", "Erstellt neuen Kanal")
+            t.BotCommand("online", "Wer so im Mumble ist"),
+            t.BotCommand("channel", "Erstellt neuen Kanal"),
+            t.BotCommand("get_id", "Zeigt die User ID"),
+            t.BotCommand("start", "Initialisiert den Bot neu"),
         ]
 
     def connect(self):
@@ -66,6 +71,11 @@ class Telegram():
         context.bot.delete_my_commands()
         context.bot.set_my_commands(self.known_commands)
         context.bot.send_message(chat_id=update.effective_chat.id, text="Hallo, ich bin Lara.")
+
+    def get_callback_get_id(self, update, context):
+        self.log.debug("got event {}".format(update))
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Deine Telegram-ID ist: {}".format(update.message.from_user.id))
 
     def get_callback_stt(self, update, context):
 
