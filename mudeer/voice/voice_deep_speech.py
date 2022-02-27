@@ -4,11 +4,10 @@ import wave
 import logging
 import datetime
 import os
-import io
 import scipy
 import scipy.signal
 import pyogg
-import ctypes
+import pathlib
 
 
 class VoiceDeepSpeech():
@@ -26,11 +25,19 @@ class VoiceDeepSpeech():
                 except FileExistsError:
                     pass
 
-        self.deepspeech = deepspeech.Model(model_path)
+        model_path = pathlib.Path(model_path)
+        if not model_path.exists():
+            raise IOError("DeepSpeech Model File \"{}\" does not exist".format(model_path))
+
+        self.deepspeech = deepspeech.Model(str(model_path))
 
         self.scorer_enabled = False
         if scorer_path:
-            self.deepspeech.enableExternalScorer(scorer_path)
+            scorer_path = pathlib.Path(scorer_path)
+            if not scorer_path.exists():
+                raise IOError("DeepSpeech Scorer File \"{}\" does not exist".format(scorer_path))
+
+            self.deepspeech.enableExternalScorer(str(scorer_path))
             self.scorer_enabled = True
 
         # self.opus_decoder = pyogg.opus_decoder.OpusDecoder()
