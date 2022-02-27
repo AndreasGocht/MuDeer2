@@ -37,6 +37,10 @@ class Skills():
                 self.log.fatal("Traceback: {}".format(traceback.format_exc()))
                 self.log.fatal("Skill won't be available")
 
+    def stop(self):
+        for skill in self.skill_list:
+            skill.stop()
+
     def process(self, text: str, chat_context: dict, global_context: dict, coms: dict, source: ComTypes) -> typing.Tuple[bool, str]:
         """
         @return Tuple: necessary mostly for the keep listening

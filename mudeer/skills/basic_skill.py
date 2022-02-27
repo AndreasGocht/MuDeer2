@@ -12,6 +12,10 @@ class BasicSkill(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
     def get_key_words(self) -> typing.List[str]:
         pass
 

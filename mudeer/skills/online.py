@@ -18,6 +18,9 @@ class Online(BasicSkill):
     def __init__(self):
         self.log = logging.getLogger(__name__)
 
+    def stop(self):
+        return super().stop()
+
     def get_key_words(self) -> typing.List[str]:
         return ["online"]
 

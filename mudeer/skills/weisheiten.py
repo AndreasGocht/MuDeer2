@@ -38,6 +38,9 @@ class Weisheit(BasicSkill):
                     self.weisheiten.append(html.unescape(w))
         self.log.debug("Got {} weisheiten".format(len(self.weisheiten)))
 
+    def stop(self):
+        return super().stop()
+
     def get_key_words(self) -> typing.List[str]:
         return ["weisheit", "weißheit"]
 

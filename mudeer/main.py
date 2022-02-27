@@ -66,5 +66,9 @@ class MuDeer():
                 return (False, "I got some Error")
 
     def run(self):
-        while True:
-            time.sleep(0.01)
+        try:
+            while True:
+                time.sleep(0.01)
+        except KeyboardInterrupt:
+            self.log.info("got Interupt, cleaning up")
+            self.skills.stop()
