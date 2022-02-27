@@ -2,7 +2,6 @@ import telegram.ext as tex
 import telegram as t
 
 import logging
-import ffmpeg
 import typing
 # import io
 
